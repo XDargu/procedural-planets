@@ -1,0 +1,29 @@
+#canvas {
+    border: 1px solid #d3d3d3;
+}
+
+.settings-section {
+    display: grid;
+    grid-template-columns: auto auto;
+    margin-top: 2em;
+}
+
+#sentence {
+    width: 400px;
+    height: 200px;
+    margin-top: 2em;
+}
+
+.grid
+{
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    grid-template-rows: 1fr;
+    column-gap: 20px;
+}
+
+.grid.portrait
+{
+    grid-template-columns: auto;
+}
