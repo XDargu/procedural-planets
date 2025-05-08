@@ -114,6 +114,8 @@ function Render() {
     // Draw the scene
     let then = 0;
 
+    noise.seed(Math.random());
+
     // Draw the scene repeatedly
     function render(now)
     {
