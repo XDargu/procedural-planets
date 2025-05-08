@@ -24,6 +24,17 @@ class Utils
         return vec3.scale(pointOnUnitsphere, pointOnUnitsphere, planetSettings.radius + elevation);
     }
 
+    static GetColorOnPlanet(pointOnPlanet, color)
+    {
+        if (debugSettings.debugFaces)
+            return color;
+
+        if (vec3.length(pointOnPlanet) < planetSettings.radius + 0.01)
+            return Utils.hexToRgba01("#2d58d7");
+
+        return color;
+    }
+
     static rgbToHex(color)
     {
         return "#" + componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]);
