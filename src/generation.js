@@ -13,20 +13,20 @@ const directions = [
     [0, 0, 1], // Backward
 ];
 
+const faceColors = [
+    [1.0, 1.0, 1.0, 1.0], // Front face: white
+    [1.0, 0.0, 0.0, 1.0], // Back face: red
+    [0.0, 1.0, 0.0, 1.0], // Top face: green
+    [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
+    [1.0, 1.0, 0.0, 1.0], // Right face: yellow
+    [1.0, 0.0, 1.0, 1.0], // Left face: purple
+];
+
 OnParamsChanged();
 Render();
 
-function createPlanet(gl)
+function createPlanet(gl, rotation)
 {
-    const faceColors = [
-        [1.0, 1.0, 1.0, 1.0], // Front face: white
-        [1.0, 0.0, 0.0, 1.0], // Back face: red
-        [0.0, 1.0, 0.0, 1.0], // Top face: green
-        [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
-        [1.0, 1.0, 0.0, 1.0], // Right face: yellow
-        [1.0, 0.0, 1.0, 1.0], // Left face: purple
-    ];
-
     for (let i=0; i<directions.length; ++i)
     {
         const direction = directions[i];
@@ -35,8 +35,10 @@ function createPlanet(gl)
         let terrainFace = new TerrainFace(planetSettings.resolution, direction);
         terrainFace.constructMesh(gl, color);
 
-        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], [0, 0, 0], [1, 1, 1]));
+        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], vec3.clone(rotation), [1, 1, 1]));
     }
+
+    console.log(renderContext.meshes);
 }
 
 function OnSettingsChanged()
@@ -44,8 +46,9 @@ function OnSettingsChanged()
     const canvas = document.getElementById("canvas");
     const gl = canvas.getContext("webgl");
 
+    const rotation = renderContext.meshes.length > 0 ? renderContext.meshes[0].rotation : [0, 0, 0];
     renderContext.meshes = [];
-    createPlanet(gl);
+    createPlanet(gl, rotation);
 }
 
 function Render() {
@@ -109,8 +112,7 @@ function Render() {
 
     // Here's where we call the routine that builds all the
     // objects we'll be drawing.
-    createPlanet(gl);
-
+    
     // Draw the scene
     let then = 0;
 
