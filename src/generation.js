@@ -209,3 +209,67 @@ function loadShader(gl, type, source) {
 
     return shader;
 }
+
+function initNoiseUI()
+{
+    const noiseList = document.getElementById("noise-list");
+    const addButton = document.getElementById("add-noise");
+
+    let createSlider = (section, name, value, onchange) => {
+
+        let input = document.createElement("input");
+        input.type = "range";
+        input.min = 0;
+        input.max = 3;
+        input.step = 0.01;
+        input.value = value;
+
+        let label = document.createElement("span");
+        label.textContent = name;
+
+        section.append(input, label);
+
+        input.oninput = onchange;
+    }
+
+    let addNoiseOption = (noiseSetting) => {
+        let section = document.createElement("div");
+        section.className = "settings-section";
+
+        createSlider(section, "Scale", noiseSetting.scale, (e) => { noiseSetting.scale = e.target.value; OnParamsChanged(); });
+        createSlider(section, "Intensity", noiseSetting.intensity, (e) => { noiseSetting.intensity = e.target.value; OnParamsChanged(); });
+
+        let deleteBtn = document.createElement("button");
+        deleteBtn.innerText = "Remove";
+
+        deleteBtn.onclick = () => {
+            const index = planetSettings.shapeProvider.noiseSettings.indexOf(noiseSetting);
+            if (index > -1)
+            {
+                planetSettings.shapeProvider.noiseSettings.splice(index, 1);
+                console.log(planetSettings.shapeProvider.noiseSettings);
+            }
+
+            noiseList.removeChild(section);
+
+            OnParamsChanged();
+        }
+
+        section.append(deleteBtn);
+        noiseList.append(section);
+    }
+
+    addButton.onclick = () =>
+    {
+        planetSettings.shapeProvider.noiseSettings.push(new NoiseSettings(0.2, 0.2));
+        addNoiseOption(planetSettings.shapeProvider.noiseSettings[planetSettings.shapeProvider.noiseSettings.length - 1]);
+        OnParamsChanged();
+    };
+
+    for (let noiseSetting of planetSettings.shapeProvider.noiseSettings)
+    {
+        addNoiseOption(noiseSetting);
+    }
+}
+
+initNoiseUI();

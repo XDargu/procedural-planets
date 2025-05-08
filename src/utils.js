@@ -1,25 +1,24 @@
+
+
 class Utils
 {
     static GetPointOnPlanet(pointOnUnitsphere)
     {
         let elevation = 0;
 
+        for (let noiseSetting of planetSettings.shapeProvider.noiseSettings)
         {
-            const scale = 0.1;
-            const intensity = 0.1;
-            const elevationOctave = noise.perlin3(pointOnUnitsphere[0] / scale, pointOnUnitsphere[1] / scale, pointOnUnitsphere[2] / scale);
-            elevation += elevationOctave * intensity;
-        }
+            const scale = noiseSetting.scale;
 
-        {
-            const scale = 0.5;
-            const intensity = 0.5;
-            const elevationOctave = noise.perlin3(pointOnUnitsphere[0] / scale, pointOnUnitsphere[1] / scale, pointOnUnitsphere[2] / scale);
-            elevation += elevationOctave * intensity;
+            if (scale > 0)
+            {
+                const elevationOctave = noise.perlin3(pointOnUnitsphere[0] / scale, pointOnUnitsphere[1] / scale, pointOnUnitsphere[2] / scale);
+                elevation += elevationOctave * noiseSetting.intensity;
+            }
         }
 
         const minValue = 0.1;
-        elevation = Math.max(0, elevation - 0.1);
+        elevation = Math.max(0, elevation - minValue);
 
         return vec3.scale(pointOnUnitsphere, pointOnUnitsphere, planetSettings.radius + elevation);
     }

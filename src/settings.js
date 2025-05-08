@@ -1,5 +1,25 @@
 // Global planet generation settings
 
+class NoiseSettings
+{
+    constructor(scale, intensity)
+    {
+        this.scale = scale;
+        this.intensity = intensity;
+    }
+}
+
+class ShapeProvider
+{
+    constructor()
+    {
+        this.noiseSettings = [];
+
+        this.noiseSettings.push(new NoiseSettings(0.1, 0.1));
+        this.noiseSettings.push(new NoiseSettings(0.5, 0.5));
+    }
+}
+
 let colorSettings = {
     planetColor: [1.0, 1.0, 1.0, 1.0],
 }
@@ -7,6 +27,7 @@ let colorSettings = {
 let planetSettings = {
     radius: 1,
     resolution: 50,
+    shapeProvider: new ShapeProvider(),
 }
 
 let debugSettings = {
