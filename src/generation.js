@@ -13,6 +13,7 @@ const directions = [
     [0, 0, 1], // Backward
 ];
 
+OnParamsChanged();
 Render();
 
 function createPlanet(gl)
