@@ -37,8 +37,6 @@ function createPlanet(gl, rotation)
 
         renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], vec3.clone(rotation), [1, 1, 1]));
     }
-
-    console.log(renderContext.meshes);
 }
 
 function OnSettingsChanged()
@@ -236,8 +234,9 @@ function initNoiseUI()
         let section = document.createElement("div");
         section.className = "settings-section";
 
-        createSlider(section, "Scale", noiseSetting.scale, (e) => { noiseSetting.scale = e.target.value; OnParamsChanged(); });
-        createSlider(section, "Intensity", noiseSetting.intensity, (e) => { noiseSetting.intensity = e.target.value; OnParamsChanged(); });
+        createSlider(section, "Scale", noiseSetting.scale, (e) => { noiseSetting.scale = e.target.valueAsNumber; OnParamsChanged(); });
+        createSlider(section, "Intensity", noiseSetting.intensity, (e) => { noiseSetting.intensity = e.target.valueAsNumber; OnParamsChanged(); });
+        createSlider(section, "Offset", noiseSetting.offset, (e) => { noiseSetting.offset = e.target.valueAsNumber; OnParamsChanged(); });
 
         let deleteBtn = document.createElement("button");
         deleteBtn.innerText = "Remove";
@@ -261,7 +260,7 @@ function initNoiseUI()
 
     addButton.onclick = () =>
     {
-        planetSettings.shapeProvider.noiseSettings.push(new NoiseSettings(0.2, 0.2));
+        planetSettings.shapeProvider.noiseSettings.push(new NoiseSettings(0.2, 0.2, 0));
         addNoiseOption(planetSettings.shapeProvider.noiseSettings[planetSettings.shapeProvider.noiseSettings.length - 1]);
         OnParamsChanged();
     };

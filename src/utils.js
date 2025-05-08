@@ -9,10 +9,15 @@ class Utils
         for (let noiseSetting of planetSettings.shapeProvider.noiseSettings)
         {
             const scale = noiseSetting.scale;
+            const offset = noiseSetting.offset;
 
             if (scale > 0)
             {
-                const elevationOctave = noise.perlin3(pointOnUnitsphere[0] / scale, pointOnUnitsphere[1] / scale, pointOnUnitsphere[2] / scale);
+                const elevationOctave = noise.perlin3(
+                    (pointOnUnitsphere[0] + offset) / scale,
+                    (pointOnUnitsphere[1] + offset) / scale,
+                    (pointOnUnitsphere[2] + offset) / scale);
+
                 elevation += elevationOctave * noiseSetting.intensity;
             }
         }
