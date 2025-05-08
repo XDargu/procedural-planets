@@ -2,11 +2,13 @@ function initBuffers(gl, mesh) {
 
     const positionBuffer = initPositionBuffer(gl, mesh.positions);
     const colorBuffer = initColorBuffer(gl, mesh.colors);
+    const normalBuffer = initNormalBuffer(gl, mesh.normals);
     const indexBuffer = initIndexBuffer(gl, mesh.indices);
 
     return {
         position: positionBuffer,
         color: colorBuffer,
+        normal: normalBuffer,
         indices: indexBuffer,
     };
 }
@@ -35,6 +37,15 @@ function initColorBuffer(gl, colors) {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
     return colorBuffer;
+}
+
+function initNormalBuffer(gl, normals) {
+
+    const normalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+    return normalBuffer;
 }
 
 function initIndexBuffer(gl, indices) {

@@ -56,23 +56,40 @@ function Render() {
     const vsSource = `
     attribute vec4 aVertexPosition;
     attribute vec4 aVertexColor;
+    attribute vec3 aVertexNormal;
 
+    uniform mat4 uNormalMatrix;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
     varying lowp vec4 vColor;
+    varying lowp vec3 vNormal;
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+
+      highp vec4 transformedNormal = uProjectionMatrix * uModelViewMatrix * vec4(aVertexNormal, 1.0);
+
       vColor = aVertexColor;
+      vNormal = transformedNormal.xyz;
     }
   `;
 
     const fsSource = `
     varying lowp vec4 vColor;
+    varying lowp vec3 vNormal;
 
     void main(void) {
-      gl_FragColor = vColor;
+
+      highp vec3 ambientLight = vec3(0.2, 0.2, 0.2);
+      highp vec3 directionalLightColor = vec3(1, 1, 1);
+      highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+
+      highp float directional = max(dot(vNormal, directionalVector), 0.0);
+      // Debug normals:
+      //gl_FragColor = vec4(vNormal * 0.5 + 0.5, 1.0);
+
+      gl_FragColor = vec4(vColor.xyz * directional + ambientLight, 1.0);
     }
   `;
 
@@ -103,6 +120,7 @@ function Render() {
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
             vertexColor: gl.getAttribLocation(shaderProgram, "aVertexColor"),
+            vertexNormal: gl.getAttribLocation(shaderProgram, "aVertexNormal"),
         },
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),

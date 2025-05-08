@@ -5,8 +5,54 @@ class Mesh
         this.positions = positions;
         this.indices = indices;
         this.colors = colors;
+        this.normals = [];
+        this.calculateNormals();
 
         this.buffers = initBuffers(gl, this);
+    }
+
+    calculateNormals()
+    {
+        let tempNormals = new Array(this.positions.length / 3);
+        for (let i = 0; i < tempNormals.length; i++)
+        {
+            tempNormals[i] = [0, 0, 0];
+        }
+
+        for (let i = 0; i < this.indices.length; i += 3)
+        {
+            const i0 = this.indices[i];
+            const i1 = this.indices[i + 1];
+            const i2 = this.indices[i + 2];
+
+            const v0 = this.positions.slice(i0 * 3, i0 * 3 + 3);
+            const v1 = this.positions.slice(i1 * 3, i1 * 3 + 3);
+            const v2 = this.positions.slice(i2 * 3, i2 * 3 + 3);
+
+            const vector1 = vec3.subtract(vec3.create(), v1, v0);
+            const vector2 = vec3.subtract(vec3.create(), v2, v0);
+
+            const faceNormal = vec3.cross(vec3.create(), vector1, vector2);
+            vec3.normalize(faceNormal, faceNormal);
+
+            vec3.add(tempNormals[i0], tempNormals[i0], faceNormal);
+            vec3.add(tempNormals[i1], tempNormals[i1], faceNormal);
+            vec3.add(tempNormals[i2], tempNormals[i2], faceNormal);
+        }
+
+        for (let i = 0; i < tempNormals.length; i++)
+        {
+            vec3.normalize(tempNormals[i], tempNormals[i]);
+        }
+
+        this.normals = new Array(this.positions.length);
+        for (let i = 0; i < tempNormals.length; i++)
+        {
+            const n = tempNormals[i];
+            this.normals[i * 3] = n[0];
+            this.normals[i * 3 + 1] = n[1];
+            this.normals[i * 3 + 2] = n[2];
+        }
     }
 }
 

@@ -37,12 +37,22 @@ function drawMeshInstance(gl, programInfo, meshInstance)
         meshInstance.scale, // amount to scale
     );
 
+    const normalMatrix = mat4.create();
+    mat4.invert(normalMatrix, modelViewMatrix);
+    mat4.transpose(normalMatrix, normalMatrix);
+
     // Set the shader uniforms
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.modelViewMatrix,
         false,
         modelViewMatrix,
     );
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.normalMatrix,
+        false,
+        normalMatrix,
+      );
 
     {
         const vertexCount = meshInstance.mesh.indices.length;
@@ -84,6 +94,7 @@ function drawScene(gl, programInfo, meshes, cubeRotation) {
         // buffer into the vertexPosition attribute.
         setPositionAttribute(gl, meshInstance.mesh.buffers, programInfo);
         setColorAttribute(gl, meshInstance.mesh.buffers, programInfo);
+        setNormalAttribute(gl, meshInstance.mesh.buffers, programInfo);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshInstance.mesh.buffers.indices);
 
@@ -140,4 +151,22 @@ function setColorAttribute(gl, buffers, programInfo) {
         offset,
     );
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+}
+
+function setNormalAttribute(gl, buffers, programInfo) {
+    const numComponents = 3;
+    const type = gl.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal);
+    gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexNormal,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset,
+    );
+    gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 }
