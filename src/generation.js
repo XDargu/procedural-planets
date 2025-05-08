@@ -1,7 +1,51 @@
-let deltaTime = 0;
-let elapsedTime = 0;
+let renderContext = {
+    meshes: [],
+    deltaTime: 0,
+    elapsedTime: 0,
+}
+
+const directions = [
+    [0, 1, 0], // Up
+    [0, -1, 0], // Down
+    [-1, 0, 0], // Left
+    [1, 0, 0], // Right
+    [0, 0, -1], // Forward
+    [0, 0, 1], // Backward
+];
 
 Render();
+
+function createPlanet(gl)
+{
+    const faceColors = [
+        [1.0, 1.0, 1.0, 1.0], // Front face: white
+        [1.0, 0.0, 0.0, 1.0], // Back face: red
+        [0.0, 1.0, 0.0, 1.0], // Top face: green
+        [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
+        [1.0, 1.0, 0.0, 1.0], // Right face: yellow
+        [1.0, 0.0, 1.0, 1.0], // Left face: purple
+    ];
+
+    for (let i=0; i<directions.length; ++i)
+    {
+        const direction = directions[i];
+
+        const color = debugSettings.debugFaces ? faceColors[i] : colorSettings.planetColor;
+        let terrainFace = new TerrainFace(planetSettings.resolution, direction);
+        terrainFace.constructMesh(gl, color);
+
+        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], [0, 0, 0], [1, 1, 1]));
+    }
+}
+
+function OnSettingsChanged()
+{
+    const canvas = document.getElementById("canvas");
+    const gl = canvas.getContext("webgl");
+
+    renderContext.meshes = [];
+    createPlanet(gl);
+}
 
 function Render() {
     // Vertex shader program
@@ -29,7 +73,6 @@ function Render() {
   `;
 
     const canvas = document.getElementById("canvas");
-
     const gl = canvas.getContext("webgl");
 
     // Only continue if WebGL is available and working
@@ -65,62 +108,26 @@ function Render() {
 
     // Here's where we call the routine that builds all the
     // objects we'll be drawing.
-    const cube = MakeCube(gl);
-
-    let meshes = [
-        //new MeshInstance(cube, [0, 0, -6], [0, 1, 0], [0.1, 0.1, 0.1]),
-    ];
-
-    const directions = [
-        [0, 1, 0], // Up
-        [0, -1, 0], // Down
-        [-1, 0, 0], // Left
-        [1, 0, 0], // Right
-        [0, 0, -1], // Forward
-        [0, 0, 1], // Backward
-    ];
-
-    const faceColors = [
-        [1.0, 1.0, 1.0, 1.0], // Front face: white
-        [1.0, 0.0, 0.0, 1.0], // Back face: red
-        [0.0, 1.0, 0.0, 1.0], // Top face: green
-        [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
-        [1.0, 1.0, 0.0, 1.0], // Right face: yellow
-        [1.0, 0.0, 1.0, 1.0], // Left face: purple
-    ];
-
-    const resolution = 50;
-
-    for (let i=0; i<directions.length; ++i)
-    {
-        const direction = directions[i];
-        const color = faceColors[i];
-        let terrainFace = new TerrainFace(resolution, direction);
-        terrainFace.constructMesh(gl, color);
-
-        meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], [0, 0, 0], [1, 1, 1]));
-    }
+    createPlanet(gl);
 
     // Draw the scene
     let then = 0;
-
-    console.log(meshes)
 
     // Draw the scene repeatedly
     function render(now)
     {
         now *= 0.001; // convert to seconds
-        deltaTime = now - then;
+        renderContext.deltaTime = now - then;
         then = now;
-        elapsedTime += deltaTime;
+        renderContext.elapsedTime += renderContext.deltaTime;
 
-        drawScene(gl, programInfo, meshes);
+        drawScene(gl, programInfo, renderContext.meshes);
 
         for (let i=0; i<directions.length; ++i)
         {
-            meshes[i].rotation[0] += deltaTime * 0.3;
-            meshes[i].rotation[1] += deltaTime * 0.7;
-            meshes[i].rotation[2] += deltaTime * 0.4;
+            renderContext.meshes[i].rotation[0] += renderContext.deltaTime * 0.1;
+            renderContext.meshes[i].rotation[1] += renderContext.deltaTime * 0.2;
+            renderContext.meshes[i].rotation[2] += renderContext.deltaTime * 0.1;
         }
 
         requestAnimationFrame(render);

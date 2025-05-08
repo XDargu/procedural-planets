@@ -48,7 +48,8 @@ function drawMeshInstance(gl, programInfo, meshInstance)
         const vertexCount = meshInstance.mesh.indices.length;
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
-        gl.drawElements(gl.LINES, vertexCount, type, offset);
+        const elementType = debugSettings.showWireframe ? gl.LINES : gl.TRIANGLES;
+        gl.drawElements(elementType, vertexCount, type, offset);
     }
 }
 

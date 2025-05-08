@@ -40,10 +40,11 @@ class TerrainFace
                 ];
 
                 const pointOnUnitSphere = vec3.normalize(vec3.create(), pointOnUnitCube);
+                const pointOnPlanet = Utils.GetPointOnPlanet(pointOnUnitSphere);
 
-                positions[posIndex] = pointOnUnitSphere[0];
-                positions[posIndex + 1] = pointOnUnitSphere[1];
-                positions[posIndex + 2] = pointOnUnitSphere[2];
+                positions[posIndex] = pointOnPlanet[0];
+                positions[posIndex + 1] = pointOnPlanet[1];
+                positions[posIndex + 2] = pointOnPlanet[2];
 
                 colors[colorIndex] = color[0];
                 colors[colorIndex + 1] = color[1];
