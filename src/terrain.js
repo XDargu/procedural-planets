@@ -40,7 +40,8 @@ class TerrainFace
                 ];
 
                 const pointOnUnitSphere = vec3.normalize(vec3.create(), pointOnUnitCube);
-                const pointOnPlanet = Utils.GetPointOnPlanet(pointOnUnitSphere);
+                const pointToUse = vec3.lerp(vec3.create(), pointOnUnitCube, pointOnUnitSphere, debugSettings.spherity);
+                const pointOnPlanet = Utils.GetPointOnPlanet(pointToUse);
                 const colorOnPlanet = Utils.GetColorOnPlanet(pointOnPlanet, color);
 
                 positions[posIndex] = pointOnPlanet[0];

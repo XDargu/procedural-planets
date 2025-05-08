@@ -30,6 +30,8 @@
         <div class="settings-section">
             <input type="checkbox" id="debug-wireframe" oninput="OnParamsChanged()"><span>Wireframe</span>
             <input type="checkbox" id="debug-faces" oninput="OnParamsChanged()"><span>Debug Faces</span>
+            <input type="range" id="debug-spherity" min="0" max="1.0" value="1.0" step="0.01" oninput="OnParamsChanged()"><span>Planet Spherity</span>
+
         </div>
     </div>
     <script src="src/generation.js"></script>

@@ -12,6 +12,7 @@ let planetSettings = {
 let debugSettings = {
     showWireframe: false,
     debugFaces: false,
+    spherity: 1.0,
 }
 
 function OnParamsChanged()
@@ -23,6 +24,7 @@ function OnParamsChanged()
 
     debugSettings.showWireframe = document.getElementById("debug-wireframe").checked;
     debugSettings.debugFaces = document.getElementById("debug-faces").checked;
+    debugSettings.spherity = document.getElementById("debug-spherity").valueAsNumber;
 
     OnSettingsChanged();
 }
