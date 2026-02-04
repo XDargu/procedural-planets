@@ -33,8 +33,8 @@ class Utils
         if (debugSettings.debugFaces)
             return color;
 
-        if (vec3.length(pointOnPlanet) < planetSettings.radius + 0.01)
-            return Utils.hexToRgba01("#2d58d7");
+        //if (vec3.length(pointOnPlanet) < planetSettings.radius + 0.01)
+            //return Utils.hexToRgba01("#2d58d7");
 
         return color;
     }

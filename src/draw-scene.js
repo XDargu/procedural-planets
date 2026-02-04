@@ -37,9 +37,10 @@ function drawMeshInstance(gl, programInfo, meshInstance)
         meshInstance.scale, // amount to scale
     );
 
-    const normalMatrix = mat4.create();
-    mat4.invert(normalMatrix, modelViewMatrix);
-    mat4.transpose(normalMatrix, normalMatrix);
+    const normalMatrix = mat3.create();
+    mat3.fromMat4(normalMatrix, modelViewMatrix); // extract upper-left 3x3
+    mat3.invert(normalMatrix, normalMatrix);      // invert
+    mat3.transpose(normalMatrix, normalMatrix);   // transpose
 
     // Set the shader uniforms
     gl.uniformMatrix4fv(
@@ -48,7 +49,7 @@ function drawMeshInstance(gl, programInfo, meshInstance)
         modelViewMatrix,
     );
 
-    gl.uniformMatrix4fv(
+    gl.uniformMatrix3fv(
         programInfo.uniformLocations.normalMatrix,
         false,
         normalMatrix,
@@ -107,6 +108,9 @@ function drawScene(gl, programInfo, meshes, cubeRotation) {
             false,
             projectionMatrix,
         );
+
+        gl.uniform1f(programInfo.uniformLocations.waterLevel, planetSettings.radius + 0.01);
+        gl.uniform3f(programInfo.uniformLocations.cameraPos, 0, 0, 0);
 
         drawMeshInstance(gl, programInfo, meshInstance);
     }

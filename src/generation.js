@@ -22,6 +22,7 @@ const faceColors = [
     [1.0, 0.0, 1.0, 1.0], // Left face: purple
 ];
 
+noise.seed(Math.random());
 OnParamsChanged();
 Render();
 
@@ -52,42 +53,88 @@ function OnSettingsChanged()
 function Render() {
     // Vertex shader program
     const vsSource = `
-    attribute vec4 aVertexPosition;
-    attribute vec4 aVertexColor;
-    attribute vec3 aVertexNormal;
+    attribute highp vec4 aVertexPosition;
+    attribute highp vec4 aVertexColor;
+    attribute highp vec3 aVertexNormal;
 
-    uniform mat4 uNormalMatrix;
+    uniform mat3 uNormalMatrix;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
-    varying lowp vec4 vColor;
-    varying lowp vec3 vNormal;
+    varying highp vec4 vColor;
+    varying highp vec3 vNormal;
+    varying highp float vHeight;
+    varying highp vec3 vWorldPos;
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
 
-      highp vec4 transformedNormal = uProjectionMatrix * uModelViewMatrix * vec4(aVertexNormal, 1.0);
-
+      vNormal = normalize(uNormalMatrix * aVertexNormal);
       vColor = aVertexColor;
-      vNormal = transformedNormal.xyz;
+      vHeight = length(aVertexPosition.xyz); // distance from center = height
+      vWorldPos = (uModelViewMatrix * aVertexPosition).xyz; // in world space
     }
   `;
 
     const fsSource = `
+    precision highp float;
+
+    varying highp vec3 vNormal;
     varying lowp vec4 vColor;
-    varying lowp vec3 vNormal;
+    varying highp float vHeight;
+    varying highp vec3 vWorldPos;
 
-    void main(void) {
+    // uniform to tweak water level
+    uniform float uWaterLevel; // e.g., 1.0 = radius at which water starts
+    uniform vec3 uCameraPos;   // camera in world space
 
-      highp vec3 ambientLight = vec3(0.2, 0.2, 0.2);
-      highp vec3 directionalLightColor = vec3(1, 1, 1);
-      highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+    void main() {
 
-      highp float directional = max(dot(vNormal, directionalVector), 0.0);
-      // Debug normals:
-      //gl_FragColor = vec4(vNormal * 0.5 + 0.5, 1.0);
+        // --------- Lighting setup ----------
+        vec3 ambientLight = vec3(0.01);
+        vec3 directionalLightColor = vec3(1.0);
+        vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
 
-      gl_FragColor = vec4(vColor.xyz * directional + ambientLight, 1.0);
+        vec3 N = normalize(vNormal);
+
+        float lambert = max(dot(N, directionalVector), 0.0);
+        vec3 diffuse = directionalLightColor * lambert;
+
+        // Specular (Phong)
+        vec3 L = directionalVector;
+        vec3 V = normalize(uCameraPos - vWorldPos); // from surface to camera
+        float fresnel = pow(1.0 - dot(N, V), 3.0);
+        vec3 H = normalize(L + V);
+        float spec = pow(max(dot(N, H), 0.0), 16.0);
+        vec3 specular = vec3(spec) * 0.2;
+
+        vec3 lighting = ambientLight + diffuse + specular;
+
+        // --------- Water effect ----------
+        vec3 terrainColor = vColor.xyz;
+        vec3 waterColor = vec3(0.0, 0.3, 0.5);
+
+        // Smooth transition between water and land
+        float t = smoothstep(uWaterLevel - 0.01, uWaterLevel, vHeight);
+        vec3 baseColor = mix(waterColor, terrainColor, t);
+
+        // Add water Fresnel-like shine
+        if(vHeight < uWaterLevel) {
+            baseColor += vec3(0.1, 0.15, 0.2) * fresnel; // subtle reflective highlight
+        }
+
+        // --------- Atmosphere ----------
+        float atmosphere = pow(1.0 - dot(N, V), 3.0);
+        vec3 atmosphereColor = vec3(0.4, 0.6, 1.0);
+        baseColor = mix(baseColor, atmosphereColor, atmosphere * 0.5);
+
+        // --------- Combine with lighting ----------
+        vec3 finalColor = baseColor * lighting;
+
+        // Gamma correction
+        finalColor = pow(finalColor, vec3(1.0 / 2.2));
+
+        gl_FragColor = vec4(finalColor, 1.0);
     }
   `;
 
@@ -123,6 +170,11 @@ function Render() {
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
+            normalMatrix: gl.getUniformLocation(shaderProgram, "uNormalMatrix"),
+
+            waterLevel: gl.getUniformLocation(shaderProgram, "uWaterLevel"),
+            cameraPos: gl.getUniformLocation(shaderProgram, "uCameraPos"),
+            
         },
     };
 
@@ -131,8 +183,6 @@ function Render() {
     
     // Draw the scene
     let then = 0;
-
-    noise.seed(Math.random());
 
     // Draw the scene repeatedly
     function render(now)
@@ -146,9 +196,9 @@ function Render() {
 
         for (let i=0; i<directions.length; ++i)
         {
-            renderContext.meshes[i].rotation[0] += renderContext.deltaTime * 0.1;
-            renderContext.meshes[i].rotation[1] += renderContext.deltaTime * 0.2;
-            renderContext.meshes[i].rotation[2] += renderContext.deltaTime * 0.1;
+            renderContext.meshes[i].rotation[0] += renderContext.deltaTime * 0.1 * 0.2;
+            renderContext.meshes[i].rotation[1] += renderContext.deltaTime * 0.2 * 0.2;
+            renderContext.meshes[i].rotation[2] += renderContext.deltaTime * 0.1 * 0.2;
         }
 
         requestAnimationFrame(render);
