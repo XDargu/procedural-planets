@@ -192,13 +192,39 @@ function Render() {
         float spec = pow(max(dot(N, H), 0.0), 32.0);
         vec3 specular = vec3(spec) * 0.2;
 
+        // --- Terrain Noise (FBM) ---
+        float terrainNoise = 0.0;
+        float amp = 2.5;
+        float freq = 2.0;
+        for(int i=0;i<5;i++){
+            terrainNoise += snoise(vLocalPos*freq)*amp;
+            freq *= 2.0;
+            amp *= 0.5;
+        }
+
+        // Continental shaping
+        float continentMask = snoise(vLocalPos*0.5)*0.5 + 0.5;
+        terrainNoise *= continentMask;
+
+        float height = vHeight + terrainNoise*0.1;
+
+        // --- Terrain color by elevation ---
+        vec3 baseTerrainColor = vColor.xyz;
+
+        vec3 deepColor = vec3(0.1,0.2,0.05);
+        vec3 midColor  = vec3(0.2,0.3,0.1);
+        vec3 highColor = vec3(0.5,0.5,0.5);
+        vec3 snowColor = vec3(1.0,1.0,1.0);
+
+        baseTerrainColor = mix(baseTerrainColor, baseTerrainColor*0.6, smoothstep(uWaterLevel+0.01,uWaterLevel+0.09,height));
+        baseTerrainColor = mix(baseTerrainColor, vec3(1.0), smoothstep(uWaterLevel+0.1,uWaterLevel+0.2,height)); // optional snow caps
+
         // ---- Water ----
-        vec3 terrainColor = vColor.xyz;
         vec3 waterColor = vec3(0.0, 0.3, 0.5);
 
         // Smooth land/water transition
         float t = smoothstep(uWaterLevel - 0.01, uWaterLevel, vHeight);
-        vec3 baseColor = mix(waterColor, terrainColor, t);
+        vec3 baseColor = mix(waterColor, baseTerrainColor, t);
 
         // --- Layered water waves (local space) ---
         vec3 flowDir = normalize(vec3(1.0,0.0,0.5));
@@ -237,7 +263,7 @@ function Render() {
 
         if(vHeight > (uWaterLevel + 0.05)) {
             float fresnel = pow(1.0 - dot(waveNormal, V), 3.0);
-            baseColor = mix(baseColor, vec3(1.0, 1.0, 1.0), 0.5);
+            //baseColor = mix(baseColor, vec3(1.0, 1.0, 1.0), 0.5);
         }
 
         // ---- Atmosphere / rim ----
