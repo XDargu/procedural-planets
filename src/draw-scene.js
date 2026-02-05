@@ -64,7 +64,7 @@ function drawMeshInstance(gl, programInfo, meshInstance)
     }
 }
 
-function drawScene(gl, programInfo, meshes, cubeRotation) {
+function drawScene(gl, programInfo, meshes, elapsedTime) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -109,6 +109,7 @@ function drawScene(gl, programInfo, meshes, cubeRotation) {
             projectionMatrix,
         );
 
+        gl.uniform1f(programInfo.uniformLocations.time, elapsedTime);
         gl.uniform1f(programInfo.uniformLocations.waterLevel, planetSettings.radius + 0.01);
         gl.uniform3f(programInfo.uniformLocations.cameraPos, 0, 0, 0);
 

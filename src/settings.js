@@ -2,11 +2,12 @@
 
 class NoiseSettings
 {
-    constructor(scale, intensity, offset)
+    constructor(scale, intensity, offset, elevation)
     {
         this.scale = scale;
         this.intensity = intensity;
         this.offset = offset;
+        this.elevation = elevation;
     }
 }
 
@@ -16,8 +17,9 @@ class ShapeProvider
     {
         this.noiseSettings = [];
 
-        this.noiseSettings.push(new NoiseSettings(0.1, 0.1, 0));
-        this.noiseSettings.push(new NoiseSettings(0.5, 0.5, 0));
+        this.noiseSettings.push(new NoiseSettings(1.28, 1.27, 1.06, 0.6));
+        this.noiseSettings.push(new NoiseSettings(0.3, 0.11, 0, 0.47));
+        this.noiseSettings.push(new NoiseSettings(0.08, 0.03, 0, 0.47));
     }
 }
 

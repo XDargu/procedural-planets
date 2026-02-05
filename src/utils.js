@@ -18,7 +18,7 @@ class Utils
                     (pointOnUnitsphere[1] + offset) / scale,
                     (pointOnUnitsphere[2] + offset) / scale);
 
-                elevation += elevationOctave * noiseSetting.intensity;
+                elevation += Math.min(elevationOctave * noiseSetting.intensity, noiseSetting.elevation * 0.2);
             }
         }
 
