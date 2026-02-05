@@ -23,6 +23,10 @@ const faceColors = [
 ];
 
 noise.seed(Math.random());
+
+// Randomize params
+//document.getElementById("planet-color").value = `#${Math.floor(Math.random()*16777215).toString(16)}`
+
 OnParamsChanged();
 Render();
 
@@ -207,6 +211,8 @@ function Render() {
         terrainNoise *= continentMask;
 
         float height = vHeight + terrainNoise*0.1;
+        vec3 planetNormal = normalize(vLocalPos);
+        float latitude = abs(planetNormal.y);
 
         // --- Terrain color by elevation ---
         vec3 baseTerrainColor = vColor.xyz;
@@ -218,6 +224,23 @@ function Render() {
 
         baseTerrainColor = mix(baseTerrainColor, baseTerrainColor*0.6, smoothstep(uWaterLevel+0.01,uWaterLevel+0.09,height));
         baseTerrainColor = mix(baseTerrainColor, vec3(1.0), smoothstep(uWaterLevel+0.1,uWaterLevel+0.2,height)); // optional snow caps
+
+        // start cooling after mid-latitudes
+        float polarFactor = smoothstep(0.7, 0.85, latitude);
+
+        vec3 coldTint = vec3(0.75, 0.85, 1.1);   // bluish cold tone
+        vec3 polarTerrain = baseTerrainColor + coldTint;
+
+        // blend based on latitude
+        baseTerrainColor = mix(baseTerrainColor, polarTerrain, polarFactor * 0.7);
+
+        // deserts
+        float desertFactor = 1.0 - smoothstep(0.2, 0.4, latitude);
+        float desertMask = clamp(snoise(vLocalPos*1.5)*1.5 + 0.5, 0.0, 1.0);
+
+        vec3 desertTerrain = vec3(0.7, 0.6, 0.1);
+        baseTerrainColor = mix(baseTerrainColor, desertTerrain, desertFactor * desertMask * 2.0);
+        //baseTerrainColor = vec3(desertMask);
 
         // ---- Water ----
         vec3 waterColor = vec3(0.0, 0.3, 0.5);
