@@ -125,104 +125,150 @@ function Render() {
     // https://github.com/ashima/webgl-noise
 
     vec4 mod289(vec4 x) {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
+        return x - floor(x * (1.0 / 289.0)) * 289.0;
     }
 
     vec3 mod289(vec3 x) {
-    return x - floor(x * (1.0 / 289.0)) * 289.0;
+        return x - floor(x * (1.0 / 289.0)) * 289.0;
     }
 
     vec4 permute(vec4 x) {
-    return mod289(((x*34.0)+1.0)*x);
+        return mod289(((x*34.0)+1.0)*x);
     }
 
     vec4 taylorInvSqrt(vec4 r) {
-    return 1.79284291400159 - 0.85373472095314 * r;
+        return 1.79284291400159 - 0.85373472095314 * r;
     }
 
     float snoise(vec3 v) { 
-    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+        const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+        const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
 
-    // First corner
-    vec3 i  = floor(v + dot(v, C.yyy) );
-    vec3 x0 = v - i + dot(i, C.xxx);
+        // First corner
+        vec3 i  = floor(v + dot(v, C.yyy) );
+        vec3 x0 = v - i + dot(i, C.xxx);
 
-    // Other corners
-    vec3 g = step(x0.yzx, x0.xyz);
-    vec3 l = 1.0 - g;
-    vec3 i1 = min( g.xyz, l.zxy );
-    vec3 i2 = max( g.xyz, l.zxy );
+        // Other corners
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min( g.xyz, l.zxy );
+        vec3 i2 = max( g.xyz, l.zxy );
 
-    vec3 x1 = x0 - i1 + C.xxx;
-    vec3 x2 = x0 - i2 + C.yyy;
-    vec3 x3 = x0 - D.yyy;
+        vec3 x1 = x0 - i1 + C.xxx;
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
 
-    // Permutations
-    i = mod289(i); 
-    vec4 p = permute( permute( permute( 
-                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-            + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
-            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+        // Permutations
+        i = mod289(i); 
+        vec4 p = permute( permute( permute( 
+                    i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
 
-    // Gradients
-    float n_ = 1.0/7.0; // N=7
-    vec3 ns = n_ * D.wyz - D.xzx;
+        // Gradients
+        float n_ = 1.0/7.0; // N=7
+        vec3 ns = n_ * D.wyz - D.xzx;
 
-    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  // mod 7*7
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  // mod 7*7
 
-    vec4 x_ = floor(j * ns.z);
-    vec4 y_ = floor(j - 7.0 * x_ );  
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_ );  
 
-    vec4 x = x_ *ns.x + ns.y;
-    vec4 y = y_ *ns.x + ns.y;
-    vec4 h = 1.0 - abs(x) - abs(y);
+        vec4 x = x_ *ns.x + ns.y;
+        vec4 y = y_ *ns.x + ns.y;
+        vec4 h = 1.0 - abs(x) - abs(y);
 
-    vec4 b0 = vec4( x.xy, y.xy );
-    vec4 b1 = vec4( x.zw, y.zw );
+        vec4 b0 = vec4( x.xy, y.xy );
+        vec4 b1 = vec4( x.zw, y.zw );
 
-    vec4 s0 = floor(b0)*2.0 + 1.0;
-    vec4 s1 = floor(b1)*2.0 + 1.0;
-    vec4 sh = -step(h, vec4(0.0));
+        vec4 s0 = floor(b0)*2.0 + 1.0;
+        vec4 s1 = floor(b1)*2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
 
-    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
 
-    vec3 p0 = vec3(a0.xy,h.x);
-    vec3 p1 = vec3(a0.zw,h.y);
-    vec3 p2 = vec3(a1.xy,h.z);
-    vec3 p3 = vec3(a1.zw,h.w);
+        vec3 p0 = vec3(a0.xy,h.x);
+        vec3 p1 = vec3(a0.zw,h.y);
+        vec3 p2 = vec3(a1.xy,h.z);
+        vec3 p3 = vec3(a1.zw,h.w);
 
-    // Normalise gradients
-    vec4 norm = taylorInvSqrt( vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)) );
-    p0 *= norm.x;
-    p1 *= norm.y;
-    p2 *= norm.z;
-    p3 *= norm.w;
+        // Normalise gradients
+        vec4 norm = taylorInvSqrt( vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)) );
+        p0 *= norm.x;
+        p1 *= norm.y;
+        p2 *= norm.z;
+        p3 *= norm.w;
 
-    // Mix contributions
-    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-    m = m * m;
-    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+        // Mix contributions
+        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+        m = m * m;
+        return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+    }
+
+    const float PI = 3.14159265359;
+
+    float DistributionGGX(vec3 N, vec3 H, float roughness)
+    {
+        float a = roughness*roughness;
+        float a2 = a*a;
+        float NdotH = max(dot(N,H),0.0);
+        float NdotH2 = NdotH*NdotH;
+
+        float num = a2;
+        float denom = (NdotH2*(a2-1.0)+1.0);
+        denom = PI*denom*denom;
+
+        return num/denom;
+    }
+
+    float GeometrySchlickGGX(float NdotV,float roughness)
+    {
+        float r = roughness+1.0;
+        float k = (r*r)/8.0;
+
+        float num = NdotV;
+        float denom = NdotV*(1.0-k)+k;
+        return num/denom;
+    }
+
+    float GeometrySmith(vec3 N,vec3 V,vec3 L,float roughness)
+    {
+        float NdotV = max(dot(N,V),0.0);
+        float NdotL = max(dot(N,L),0.0);
+        float ggx1 = GeometrySchlickGGX(NdotV,roughness);
+        float ggx2 = GeometrySchlickGGX(NdotL,roughness);
+        return ggx1*ggx2;
+    }
+
+    vec3 fresnelSchlick(float cosTheta,vec3 F0)
+    {
+        return F0+(1.0-F0)*pow(1.0-cosTheta,5.0);
+    }
+
+    float terrainHeight(vec3 p)
+    {
+        float h = 0.0;
+        h += snoise(p * 60.0) * 0.5;
+        h += snoise(p * 120.0) * 0.25;
+        h += snoise(p * 240.0) * 0.125;
+        return h;
     }
 
     void main() {
 
-        // ---- Lighting ----
         vec3 N = normalize(vNormal);
-        vec3 L = normalize(vec3(0.85, 0.8, 0.75)); // directional light
         vec3 V = normalize(uCameraPos - vWorldPos);
-        vec3 H = normalize(L + V);
+        vec3 L = normalize(vec3(0.85,0.8,0.75));
+        vec3 H = normalize(V + L);
 
-        // Phong lighting
-        float lambert = max(dot(N, L), 0.0);
-        vec3 diffuse = vec3(1.0) * lambert;
-        float spec = pow(max(dot(N, H), 0.0), 32.0);
-        vec3 specular = vec3(spec) * 0.2;
+        float NdotL = max(dot(N,L),0.0);
 
-        // --- Terrain Noise (FBM) ---
+        // -----------------------------
+        // TERRAIN HEIGHT
+        // -----------------------------
         float terrainNoise = 0.0;
-        float amp = 2.5;
+        float amp = 0.5;
         float freq = 2.0;
         for(int i=0;i<5;i++){
             terrainNoise += snoise(vLocalPos*freq)*amp;
@@ -230,26 +276,31 @@ function Render() {
             amp *= 0.5;
         }
 
-        // Continental shaping
         float continentMask = snoise(vLocalPos*0.5)*0.5 + 0.5;
         terrainNoise *= continentMask;
 
         float height = vHeight + terrainNoise*0.1;
-        vec3 planetNormal = normalize(vLocalPos);
-        float latitude = abs(planetNormal.y);
 
-        // --- Terrain color by elevation ---
+        // -----------------------------
+        // TERRAIN BASE COLOR
+        // -----------------------------
         vec3 baseTerrainColor = vColor.xyz;
 
-        vec3 deepColor = vec3(0.1,0.2,0.05);
-        vec3 midColor  = vec3(0.2,0.3,0.1);
-        vec3 highColor = vec3(0.5,0.5,0.5);
-        vec3 snowColor = vec3(1.0,1.0,1.0);
+        baseTerrainColor = mix(baseTerrainColor,
+                            baseTerrainColor*0.6,
+                            smoothstep(uWaterLevel+0.05,
+                                        uWaterLevel+0.15,
+                                        height));
 
+        baseTerrainColor = mix(baseTerrainColor,
+                            vec3(1.0),
+                            smoothstep(uWaterLevel+0.15,
+                                        uWaterLevel+0.25,
+                                        height));
 
-        baseTerrainColor = mix(baseTerrainColor, baseTerrainColor*0.6, smoothstep(uWaterLevel+0.01,uWaterLevel+0.09,height));
-        baseTerrainColor = mix(baseTerrainColor, vec3(1.0), smoothstep(uWaterLevel+0.1,uWaterLevel+0.2,height)); // optional snow caps
-
+        vec3 planetNormal = normalize(vLocalPos);
+        float latitude = abs(planetNormal.y);
+        
         // start cooling after mid-latitudes
         float polarFactor = smoothstep(0.7, 0.85, latitude);
 
@@ -265,68 +316,156 @@ function Render() {
 
         vec3 desertTerrain = vec3(0.7, 0.6, 0.1);
         baseTerrainColor = mix(baseTerrainColor, desertTerrain, desertFactor * desertMask * 2.0);
-        //baseTerrainColor = vec3(desertMask);
 
-        // ---- Water ----
-        vec3 waterColor = vec3(0.0, 0.3, 0.5);
+        // Terrain detail
+        if(vHeight >= uWaterLevel)
+        {
+            vec3 radial = normalize(vLocalPos);
 
-        // Smooth land/water transition
-        float t = smoothstep(uWaterLevel - 0.01, uWaterLevel, vHeight);
-        vec3 baseColor = mix(waterColor, baseTerrainColor, t);
+            vec3 up = abs(radial.y) < 0.999
+                ? vec3(0.0,1.0,0.0)
+                : vec3(1.0,0.0,0.0);
 
-        // --- Layered water waves (local space) ---
-        vec3 flowDir = normalize(vec3(1.0,0.0,0.5));
-        float wave1 = snoise(vLocalPos*20.0 + flowDir*uTime*0.3) * 8.2;
-        float wave2 = snoise(vLocalPos*50.0 - flowDir*uTime*0.5) * 4.1;
-        float wave3 = snoise(vLocalPos*100.0 + flowDir*uTime*1.2) * 1.05;
-        vec3 waterNormal = normalize(N + vec3(0.0, wave1 + wave2 + wave3, 0.0));
+            vec3 T = normalize(cross(up, radial));
+            vec3 B = normalize(cross(radial, T));
 
-        // --- Fresnel + specular reflection ---
-        if(vHeight < uWaterLevel){
-            float fresnel = pow(1.0 - dot(waterNormal,V),3.0);
-            float specWater = pow(max(dot(waterNormal,H),0.0),64.0);
-            vec3 specularWater = vec3(specWater)*0.5;
-            baseColor += specularWater*fresnel;
+            float eps = 0.002;
 
-            // approximate sky reflection
-            vec3 reflectedColor = mix(waterColor, vec3(0.4,0.6,1.0), fresnel);
-            baseColor = mix(baseColor, reflectedColor, fresnel*0.2);
+            float h  = terrainHeight(vLocalPos);
+            float hx = terrainHeight(vLocalPos + T * eps);
+            float hy = terrainHeight(vLocalPos + B * eps);
+
+            float dHdT = (hx - h) / eps;
+            float dHdB = (hy - h) / eps;
+
+            // tangent space normal
+            vec3 microNormal =
+                normalize(
+                    radial
+                - T * dHdT * 1.6
+                - B * dHdB * 1.6
+                );
+
+            // blend with base normal
+            N = normalize(mix(N, microNormal, 0.2 * (1.0 - (desertFactor * desertMask))));
+            //baseTerrainColor = N;
         }
+            //else { baseTerrainColor =vec3(0);  }
 
+        float slope = 1.0 - dot(N, normalize(vLocalPos));
+        
+        vec3 rockColor = baseTerrainColor * vec3(0.7,0.7,0.75);
+        baseTerrainColor = mix(baseTerrainColor, rockColor, smoothstep(0.93,0.6,slope));
+        //baseTerrainColor = vec3(slope);
+        //baseTerrainColor = N;
+
+        // Beaches
         if(vHeight > uWaterLevel - 0.005)
         {
             // Beaches
             float beach = clamp(snoise(vLocalPos*1.0 + 100.3) * 8.0, 0.0, 1.0);
 
             if(vHeight < uWaterLevel + 0.005) {
-                baseColor = mix(baseColor, vec3(0.7, 0.6, 0.1), beach);
+                baseTerrainColor = mix(baseTerrainColor, vec3(0.7, 0.6, 0.1), beach * 0.8);
             }
-
-            //gl_FragColor = vec4(vec3(beach), 1.0);
         }
 
-        // Snow
-        float wave = snoise(vLocalPos * 10.0 + uTime * 0.15) * 0.8;
-        vec3 waveNormal = normalize(N + vec3(0.0, wave, 0.0));
-        if(vHeight > (uWaterLevel + 0.05)) {
-            float fresnel = pow(1.0 - dot(waveNormal, V), 3.0);
-            //baseColor = mix(baseColor, vec3(1.0, 1.0, 1.0), 0.5);
+        // -----------------------------
+        // WATER MIX
+        // -----------------------------
+        vec3 waterColor = vec3(0.0,0.3,0.5);
+
+        float t = smoothstep(uWaterLevel-0.01,
+                            uWaterLevel,
+                            vHeight);
+
+        vec3 baseColor = mix(waterColor,
+                            baseTerrainColor,
+                            t);
+
+        // -----------------------------
+        // WATER WAVES NORMAL
+        // -----------------------------
+        vec3 flowDir = normalize(vec3(1.0,0.0,0.5));
+        float wave1 = snoise(vLocalPos*20.0 + flowDir*uTime*0.3) * 0.4;
+        float wave2 = snoise(vLocalPos*50.0 - flowDir*uTime*0.5) * 0.2;
+        float wave3 = snoise(vLocalPos*100.0 + flowDir*uTime*1.2) * 0.1;
+
+        vec3 waterNormal = normalize(N + vec3(0.0,wave1+wave2+wave3,0.0));
+
+        bool isWater = (vHeight < uWaterLevel);
+        if(isWater)
+            N = waterNormal;
+        
+        // -----------------------------
+        // PBR MATERIAL
+        // -----------------------------
+        vec3 albedo = baseColor;
+        float metallic = 0.0;
+        float roughness = 0.8;
+
+        if(isWater)
+            roughness = 0.2;
+        else
+        {
+            roughness = mix(0.9,0.5,
+                            smoothstep(uWaterLevel+0.05,
+                                    uWaterLevel+0.2,
+                                    height));
+
+            float terrainNoiseRoughness = snoise(vLocalPos * 25.0) * 0.5 + 0.5;
+
+            roughness = mix(0.4, 0.9, terrainNoiseRoughness);
+            roughness = mix(roughness, 1.0, slope); // cliffs more rough
+            roughness = 0.8 + terrainHeight(vLocalPos) * 0.2;
         }
 
-        // ---- Atmosphere / rim ----
-        float rim = clamp(1.0 - dot(N, V), 0.0, 1.0);
-        rim = pow(rim, 2.0); // adjust softness
-        vec3 rimColor = vec3(0.4, 0.6, 1.0);
-        baseColor = mix(baseColor, rimColor, rim * 0.75);
+        // -----------------------------
+        // COOK-TORRANCE BRDF
+        // -----------------------------
+        vec3 F0 = vec3(0.04);
+        F0 = mix(F0, albedo, metallic);
 
-        // ---- Combine with lighting ----
-        vec3 lighting = vec3(0.05) + diffuse + specular; // ambient + diffuse + spec
-        vec3 finalColor = baseColor * lighting;
+        float NDF = DistributionGGX(N,H,roughness);
+        float G   = GeometrySmith(N,V,L,roughness);
+        vec3  F   = fresnelSchlick(max(dot(H,V),0.0),F0);
 
-        // Gamma correction
-        finalColor = pow(finalColor, vec3(1.0 / 2.2));
+        vec3 numerator = NDF * G * F;
+        float denom = 4.0*max(dot(N,V),0.0)*NdotL + 0.001;
+        vec3 specular = numerator/denom;
 
-        gl_FragColor = vec4(finalColor, 1.0);
+        vec3 kS = F;
+        vec3 kD = vec3(1.0)-kS;
+        kD *= 1.0-metallic;
+
+        vec3 diffuse = kD * albedo / PI;
+        vec3 radiance = normalize(vec3(0.85, 0.8, 0.75)) * 6.0;
+
+        vec3 Lo = (diffuse + specular) * radiance * NdotL;
+
+        // -----------------------------
+        // FOAM
+        // -----------------------------
+        if(isWater){
+            float foam = smoothstep(uWaterLevel-0.03,
+                                    uWaterLevel,
+                                    height);
+            foam = 1.0 - foam;
+            //albedo += vec3(0.8,0.85,0.9)*foam*0.8125;
+        }
+
+        // -----------------------------
+        // FINAL COLOR
+        // -----------------------------
+        vec3 ambient = albedo * 0.05;
+        vec3 finalColor = ambient + Lo;
+
+        float rim = pow(clamp(1.0-dot(N,V),0.0,1.0),5.0);
+        finalColor = mix(finalColor, vec3(0.4, 0.6, 1.0), rim*0.15);
+
+        finalColor = pow(finalColor, vec3(1.0/2.2));
+
+        gl_FragColor = vec4(finalColor,1.0);
 }
   `;
 
