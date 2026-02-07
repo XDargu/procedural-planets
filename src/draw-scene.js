@@ -1,41 +1,30 @@
-function drawMeshInstance(gl, programInfo, meshInstance)
+function drawMeshInstance(gl, programInfo, meshInstance, viewMatrix)
 {
     // Set the drawing position to the "identity" point, which is
     // the center of the scene.
-    const modelViewMatrix = mat4.create();
+    const modelMatrix = mat4.create();
 
     // Now move the drawing position a bit to where we want to
     // start drawing the square.
     mat4.translate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to translate
+        modelMatrix, // destination matrix
+        modelMatrix, // matrix to translate
         meshInstance.position,
     ); // amount to translate
 
-    mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        meshInstance.rotation[2], // amount to rotate in radians
-        [0, 0, 1],
-    ); // axis to rotate around (Z)
-    mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        meshInstance.rotation[1], // amount to rotate in radians
-        [0, 1, 0],
-    ); // axis to rotate around (Y)
-    mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        meshInstance.rotation[0], // amount to rotate in radians
-        [1, 0, 0],
-    ); // axis to rotate around (X)
+    // rotation from quaternion
+    const rotMatrix = mat4.create();
+    mat4.fromQuat(rotMatrix, meshInstance.orientation);
+    mat4.multiply(modelMatrix, modelMatrix, rotMatrix);
 
     mat4.scale(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to scale
+        modelMatrix, // destination matrix
+        modelMatrix, // matrix to scale
         meshInstance.scale, // amount to scale
     );
+
+    const modelViewMatrix = mat4.create();
+    mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
 
     const normalMatrix = mat3.create();
     mat3.fromMat4(normalMatrix, modelViewMatrix); // extract upper-left 3x3
@@ -85,6 +74,14 @@ function drawScene(gl, programInfo, meshes, elapsedTime) {
     const zFar = 100.0;
     const projectionMatrix = mat4.create();
 
+    const viewMatrix = mat4.create();
+    mat4.lookAt(
+        viewMatrix,
+        renderContext.camera.position,
+        renderContext.camera.target,
+        renderContext.camera.up
+    );
+
     // note: glMatrix always has the first argument
     // as the destination to receive the result.
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
@@ -111,9 +108,13 @@ function drawScene(gl, programInfo, meshes, elapsedTime) {
 
         gl.uniform1f(programInfo.uniformLocations.time, elapsedTime);
         gl.uniform1f(programInfo.uniformLocations.waterLevel, planetSettings.radius + 0.01);
-        gl.uniform3f(programInfo.uniformLocations.cameraPos, 0, 0, 0);
+        gl.uniform3f(programInfo.uniformLocations.cameraPos,
+            renderContext.camera.position[0],
+            renderContext.camera.position[1],
+            renderContext.camera.position[2]
+        );
 
-        drawMeshInstance(gl, programInfo, meshInstance);
+        drawMeshInstance(gl, programInfo, meshInstance, viewMatrix);
     }
 }
 

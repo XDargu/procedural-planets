@@ -54,4 +54,20 @@ class Utils
             1.0
         ] : [0,0,0,0];
     }
+
+    static matrixToEulerXYZ(out, m)
+    {
+        out[1] = Math.asin(-m[2]);
+
+        if (Math.cos(out[1]) !== 0)
+        {
+            out[0] = Math.atan2(m[6], m[10]);
+            out[2] = Math.atan2(m[1], m[0]);
+        }
+        else
+        {
+            out[0] = Math.atan2(-m[9], m[5]);
+            out[2] = 0;
+        }
+    }
 }

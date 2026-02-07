@@ -2,6 +2,11 @@ let renderContext = {
     meshes: [],
     deltaTime: 0,
     elapsedTime: 0,
+    camera: {
+        position: [0, 0, 0],
+        target:   [0, 0, -5],
+        up:       [0, 1, 0],
+    }
 }
 
 const directions = [
@@ -22,15 +27,31 @@ const faceColors = [
     [1.0, 0.0, 1.0, 1.0], // Left face: purple
 ];
 
-noise.seed(Math.random());
+function zoomCamera(amount) {
+    const cam = renderContext.camera;
 
-// Randomize params
-//document.getElementById("planet-color").value = `#${Math.floor(Math.random()*16777215).toString(16)}`
+    // compute vector from camera to target
+    const forward = vec3.create();
+    vec3.subtract(forward, cam.target, cam.position);
 
-OnParamsChanged();
-Render();
+    const dist = vec3.length(forward);
+    if (dist < 0.001) return; // too close, skip
+    
+    vec3.normalize(forward, forward);
 
-function createPlanet(gl, rotation)
+    // move camera along forward, but clamp distance
+    const minDist = 4.0;
+    const maxDist = 10.0;
+
+    let newDist = dist - amount; // subtract because forward points target - cam
+    newDist = Math.min(Math.max(newDist, minDist), maxDist);
+
+    // new camera position = target - forward * newDist
+    vec3.scale(forward, forward, newDist);
+    vec3.subtract(cam.position, cam.target, forward);
+}
+
+function createPlanet(gl, orientation)
 {
     for (let i=0; i<directions.length; ++i)
     {
@@ -40,7 +61,7 @@ function createPlanet(gl, rotation)
         let terrainFace = new TerrainFace(planetSettings.resolution, direction);
         terrainFace.constructMesh(gl, color);
 
-        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], vec3.clone(rotation), [1, 1, 1]));
+        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], quat.clone(orientation), [1, 1, 1]));
     }
 }
 
@@ -49,9 +70,9 @@ function OnSettingsChanged()
     const canvas = document.getElementById("canvas");
     const gl = canvas.getContext("webgl");
 
-    const rotation = renderContext.meshes.length > 0 ? renderContext.meshes[0].rotation : [0, 0, 0];
+    const orientation = renderContext.meshes.length > 0 ? renderContext.meshes[0].orientation : quat.create();
     renderContext.meshes = [];
-    createPlanet(gl, rotation);
+    createPlanet(gl, orientation);
 }
 
 function Render() {
@@ -106,12 +127,15 @@ function Render() {
     vec4 mod289(vec4 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
     }
+
     vec3 mod289(vec3 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
     }
+
     vec4 permute(vec4 x) {
     return mod289(((x*34.0)+1.0)*x);
     }
+
     vec4 taylorInvSqrt(vec4 r) {
     return 1.79284291400159 - 0.85373472095314 * r;
     }
@@ -222,6 +246,7 @@ function Render() {
         vec3 highColor = vec3(0.5,0.5,0.5);
         vec3 snowColor = vec3(1.0,1.0,1.0);
 
+
         baseTerrainColor = mix(baseTerrainColor, baseTerrainColor*0.6, smoothstep(uWaterLevel+0.01,uWaterLevel+0.09,height));
         baseTerrainColor = mix(baseTerrainColor, vec3(1.0), smoothstep(uWaterLevel+0.1,uWaterLevel+0.2,height)); // optional snow caps
 
@@ -267,7 +292,7 @@ function Render() {
             vec3 reflectedColor = mix(waterColor, vec3(0.4,0.6,1.0), fresnel);
             baseColor = mix(baseColor, reflectedColor, fresnel*0.2);
         }
-        
+
         if(vHeight > uWaterLevel - 0.005)
         {
             // Beaches
@@ -283,7 +308,6 @@ function Render() {
         // Snow
         float wave = snoise(vLocalPos * 10.0 + uTime * 0.15) * 0.8;
         vec3 waveNormal = normalize(N + vec3(0.0, wave, 0.0));
-
         if(vHeight > (uWaterLevel + 0.05)) {
             float fresnel = pow(1.0 - dot(waveNormal, V), 3.0);
             //baseColor = mix(baseColor, vec3(1.0, 1.0, 1.0), 0.5);
@@ -351,6 +375,8 @@ function Render() {
     // objects we'll be drawing.
     
     // Draw the scene
+    let extraRotationX = 0;
+    let extraRotationY = 0;
     let then = 0;
 
     // Draw the scene repeatedly
@@ -365,14 +391,48 @@ function Render() {
 
         for (let i=0; i<directions.length; ++i)
         {
-            renderContext.meshes[i].rotation[0] += renderContext.deltaTime * 0.1 * 0.5;
-            renderContext.meshes[i].rotation[1] += renderContext.deltaTime * 0.2 * 0.5;
-            renderContext.meshes[i].rotation[2] += renderContext.deltaTime * 0.1 * 0.5;
+            let orientation = renderContext.meshes[i].orientation;
+
+            const spin = quat.create();
+            quat.setAxisAngle(spin, [0,1,0], renderContext.deltaTime * 0.1);
+            quat.multiply(orientation, spin, orientation);
+
+            const rotX = quat.create();
+            const rotY = quat.create();
+
+            quat.setAxisAngle(rotX, [1,0,0], extraRotationY);
+            quat.setAxisAngle(rotY, [0,1,0], extraRotationX);
+
+            const drag = quat.create();
+            quat.multiply(drag, rotY, rotX);
+
+            // Drag in world space
+            quat.multiply(orientation, drag, orientation);
+
+            quat.normalize(orientation, orientation);
         }
 
+        extraRotationX = 0;
+        extraRotationY = 0;
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
+
+    let pressed = false;
+    canvas.onmousedown = () => { pressed = true; }
+    canvas.onmouseup = () => { pressed = false; }
+    canvas.onmousemove = (e) => {
+        if (pressed)
+        {
+            extraRotationX += e.movementX * 0.005;
+            extraRotationY += e.movementY * 0.005;
+        }
+    }
+    canvas.addEventListener("wheel", (event) => {
+        event.preventDefault(); // prevent scrolling the page
+        const zoomAmount = event.deltaY * 0.002;
+        zoomCamera(zoomAmount);
+    });
 }
 
 function initShaderProgram(gl, vsSource, fsSource) {
@@ -490,5 +550,39 @@ function initNoiseUI()
         addNoiseOption(noiseSetting);
     }
 }
+
+
+function AdaptCanvas()
+{
+    const canvas = document.getElementById("canvas");
+    const grid = document.body;
+    grid.classList.remove("portrait");
+    
+    const height = document.documentElement.clientHeight;
+    const width = document.documentElement.clientWidth;
+    if (width > height)
+    {
+        // Landscape
+        canvas.width = width / 2 - 25;
+        canvas.height = width / 2 - 25;
+    }
+    else
+    {
+        // Portrait
+        canvas.width = width - 25;
+        canvas.height = width - 25;
+        grid.classList.add("portrait");
+    }
+}
+
+AdaptCanvas();
+
+noise.seed(Math.random());
+
+// Randomize params
+//document.getElementById("planet-color").value = `#${Math.floor(Math.random()*16777215).toString(16)}`
+
+OnParamsChanged();
+Render();
 
 initNoiseUI();
