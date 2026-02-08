@@ -59,9 +59,14 @@ function createPlanet(gl, orientation)
 
         const color = debugSettings.debugFaces ? faceColors[i] : colorSettings.planetColor;
         let terrainFace = new TerrainFace(planetSettings.resolution, direction);
-        terrainFace.constructMesh(gl, color);
+        terrainFace.constructMesh(gl, color, Utils.GetPointOnPlanet, Utils.GetColorOnPlanet);
 
-        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], quat.clone(orientation), [1, 1, 1]));
+        renderContext.meshes.push(new MeshInstance(terrainFace.mesh, [0, 0, -4], quat.clone(orientation), [1, 1, 1], "planet"));
+
+        // Clouds
+        let cloudsFace = new TerrainFace(20, direction);
+        cloudsFace.constructMesh(gl, color, (point) => { return vec3.scale(point, point, planetSettings.radius * 1.1); }, (point, color) => { return color; });
+        renderContext.meshes.push(new MeshInstance(cloudsFace.mesh, [0, 0, -4], quat.clone(orientation), [1, 1, 1], "clouds"));
     }
 }
 
@@ -118,6 +123,7 @@ function Render() {
     uniform float uWaterLevel;    // e.g., 0.95
     uniform vec3 uCameraPos;      // camera position in world space
     uniform float uTime;          // time in seconds for animation
+    uniform float uIsCloudLayer;  // if this is the layer with clouds
 
     // --- Simplex noise functions for terrain/waves/clouds ---
     // GLSL Simplex Noise 3D
@@ -219,6 +225,24 @@ function Render() {
         vec3 diffuse = vec3(1.0) * lambert;
         float spec = pow(max(dot(N, H), 0.0), 32.0);
         vec3 specular = vec3(spec) * 0.2;
+
+        if (uIsCloudLayer != 0.0)
+        {
+            float cloud1 = snoise(vLocalPos *1.0 + uTime * 0.01) * 0.5;
+            float cloud2 = snoise(vLocalPos *3.0 + uTime * 0.03) * 0.3;
+            float cloud3 = snoise(vLocalPos *7.0 + uTime * 0.06) * 0.2;
+            float cloudMask = clamp(cloud1 + cloud2 + cloud3, 0.0, 1.0);
+
+            // ---- Combine with lighting ----
+            vec3 lighting = vec3(0.05) + diffuse + specular; // ambient + diffuse + spec
+            vec3 finalColor = vec3(0.5) * lighting;
+
+            // Gamma correction
+            finalColor = pow(finalColor, vec3(1.0 / 2.2));
+
+            gl_FragColor = vec4(finalColor, cloudMask * clamp(lighting * 2.0, 0.1, 1.0));
+            return;
+        }
 
         // --- Terrain Noise (FBM) ---
         float terrainNoise = 0.0;
@@ -367,7 +391,7 @@ function Render() {
             waterLevel: gl.getUniformLocation(shaderProgram, "uWaterLevel"),
             cameraPos: gl.getUniformLocation(shaderProgram, "uCameraPos"),
             time: gl.getUniformLocation(shaderProgram, "uTime"),
-            
+            clouds: gl.getUniformLocation(shaderProgram, "uIsCloudLayer"),
         },
     };
 
@@ -389,9 +413,9 @@ function Render() {
 
         drawScene(gl, programInfo, renderContext.meshes, renderContext.elapsedTime);
 
-        for (let i=0; i<directions.length; ++i)
+        for (let mesh of renderContext.meshes)
         {
-            let orientation = renderContext.meshes[i].orientation;
+            let orientation = mesh.orientation;
 
             const spin = quat.create();
             quat.setAxisAngle(spin, [0,1,0], renderContext.deltaTime * 0.1);

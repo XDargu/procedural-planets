@@ -11,7 +11,7 @@ class TerrainFace
         vec3.cross(this.axisB, localUp, this.axisA);
     }
 
-    constructMesh(gl, color)
+    constructMesh(gl, color, pointFun, colorFunc)
     {
         let positions = new Array(this.resolution * this.resolution * 3);
         let indices = new Array( (this.resolution - 1) * (this.resolution - 1) * 6);        
@@ -41,8 +41,8 @@ class TerrainFace
 
                 const pointOnUnitSphere = vec3.normalize(vec3.create(), pointOnUnitCube);
                 const pointToUse = vec3.lerp(vec3.create(), pointOnUnitCube, pointOnUnitSphere, debugSettings.spherity);
-                const pointOnPlanet = Utils.GetPointOnPlanet(pointToUse);
-                const colorOnPlanet = Utils.GetColorOnPlanet(pointOnPlanet, color);
+                const pointOnPlanet = pointFun(pointToUse);
+                const colorOnPlanet = colorFunc(pointOnPlanet, color);
 
                 positions[posIndex] = pointOnPlanet[0];
                 positions[posIndex + 1] = pointOnPlanet[1];

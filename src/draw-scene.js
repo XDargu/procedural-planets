@@ -86,36 +86,54 @@ function drawScene(gl, programInfo, meshes, elapsedTime) {
     // as the destination to receive the result.
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
-    for (let meshInstance of meshes)
+    const drawMeshes = (meshes) =>
     {
-        // Tell WebGL how to pull out the positions from the position
-        // buffer into the vertexPosition attribute.
-        setPositionAttribute(gl, meshInstance.mesh.buffers, programInfo);
-        setColorAttribute(gl, meshInstance.mesh.buffers, programInfo);
-        setNormalAttribute(gl, meshInstance.mesh.buffers, programInfo);
+        for (let meshInstance of meshes)
+        {
+            // Tell WebGL how to pull out the positions from the position
+            // buffer into the vertexPosition attribute.
+            setPositionAttribute(gl, meshInstance.mesh.buffers, programInfo);
+            setColorAttribute(gl, meshInstance.mesh.buffers, programInfo);
+            setNormalAttribute(gl, meshInstance.mesh.buffers, programInfo);
 
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshInstance.mesh.buffers.indices);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshInstance.mesh.buffers.indices);
 
-        // Tell WebGL to use our program when drawing
-        gl.useProgram(programInfo.program);
+            // Tell WebGL to use our program when drawing
+            gl.useProgram(programInfo.program);
 
-        // Set the shader uniforms
-        gl.uniformMatrix4fv(
-            programInfo.uniformLocations.projectionMatrix,
-            false,
-            projectionMatrix,
-        );
+            // Set the shader uniforms
+            gl.uniformMatrix4fv(
+                programInfo.uniformLocations.projectionMatrix,
+                false,
+                projectionMatrix,
+            );
 
-        gl.uniform1f(programInfo.uniformLocations.time, elapsedTime);
-        gl.uniform1f(programInfo.uniformLocations.waterLevel, planetSettings.radius + 0.01);
-        gl.uniform3f(programInfo.uniformLocations.cameraPos,
-            renderContext.camera.position[0],
-            renderContext.camera.position[1],
-            renderContext.camera.position[2]
-        );
+            gl.uniform1f(programInfo.uniformLocations.clouds, meshInstance.type == "clouds" ? 1 : 0);
+            gl.uniform1f(programInfo.uniformLocations.time, elapsedTime);
+            gl.uniform1f(programInfo.uniformLocations.waterLevel, planetSettings.radius + 0.01);
+            gl.uniform3f(programInfo.uniformLocations.cameraPos,
+                renderContext.camera.position[0],
+                renderContext.camera.position[1],
+                renderContext.camera.position[2]
+            );
 
-        drawMeshInstance(gl, programInfo, meshInstance, viewMatrix);
+            drawMeshInstance(gl, programInfo, meshInstance, viewMatrix);
+        }
     }
+
+    // Sort based in transparency
+    const opaque = meshes.filter((m) => m.type == "planet" );
+    const transparent = meshes.filter((m) => m.type == "clouds" );
+
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+    drawMeshes(opaque);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    drawMeshes(transparent);
+    gl.depthMask(true);
 }
 
 // Tell WebGL how to pull out the positions from the position
